@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Prediction Dashboard</title>
+
+    <!-- ✅ Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- ✅ Optional External CSS -->
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #0f172a, #020617);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Glow Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: #00ff88;
+            filter: blur(160px);
+            opacity: 0.12;
+            top: -100px;
+            left: -100px;
+            z-index: -1;
+        }
+
+        .container {
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 42px;
+            margin-bottom: 35px;
+        }
+
+        /* =========================
+           DASHBOARD STATS
+        ========================= */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 0 30px rgba(0,0,0,0.4);
+            transition: 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #aaa;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+
+        .stat-number {
+            font-size: 40px;
+            font-weight: 700;
+            color: #00ff99;
+        }
+
+        /* =========================
+           CHART SECTION
+        ========================= */
+
+        .chart-card {
+            margin-top: 35px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 0 30px rgba(0,0,0,0.4);
+        }
+
+        .chart-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+
+        canvas {
+            max-width: 650px;
+            max-height: 500px;
+            margin: auto;
+            display: block;
+        }
+
+        /* =========================
+           BUTTON
+        ========================= */
+
+        .btn-wrap {
+            text-align: center;
+            margin-top: 35px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            text-decoration: none;
+            transition: 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: rgba(0,255,136,0.08);
+            transform: translateY(-2px);
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media(max-width: 768px) {
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .stat-number {
+                font-size: 30px;
+            }
+
+            .chart-card h2 {
+                font-size: 22px;
+            }
+
+            canvas {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <!-- TITLE -->
+        <h1>📊 Prediction Dashboard</h1>
+
+        <!-- ======================
+             STATS
+        ======================= -->
+
+        <div class="dashboard-grid">
+
+            <!-- TOTAL -->
+            <div class="stat-card">
+
+                <h3>Total Predictions</h3>
+
+                <div class="stat-number">
+                    {{ total }}
+                </div>
+
+            </div>
+
+            <!-- MOST DETECTED -->
+            <div class="stat-card">
+
+                <h3>Most Detected</h3>
+
+                <div class="stat-number">
+                    {{ most_detected }}
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ======================
+             CHART
+        ======================= -->
+
+        <section class="chart-card">
+
+            <h2>Disease Distribution</h2>
+
+            <canvas id="chart"></canvas>
+
+        </section>
+
+        <!-- ======================
+             BACK BUTTON
+        ======================= -->
+
+        <div class="btn-wrap">
+
+            <a href="/" class="btn">
+                ⬅ Back
+            </a>
+
+        </div>
+
+    </main>
+
+    <!-- ======================
+         CHART SCRIPT
+    ======================= -->
+
+    <script>
+
+        // data from flask
+        const labels = {{ labels | tojson }};
+        const values = {{ values | tojson }};
+
+        // fallback if no data
+        if (!labels.length) {
+
+            labels.push("No Data");
+            values.push(1);
+
+        }
+
+        // chart context
+        const ctx = document.getElementById("chart");
+
+        // create chart
+        new Chart(ctx, {
+
+            type: 'pie',
+
+            data: {
+
+                labels: labels,
+
+                datasets: [{
+
+                    data: values,
+
+                    backgroundColor: [
+                        "#00ff99",
+                        "#00ccff",
+                        "#ffcc00",
+                        "#ff4444",
+                        "#aa66ff",
+                        "#ff8800"
+                    ],
+
+                    borderColor: "#111",
+                    borderWidth: 2
+
+                }]
+            },
+
+            options: {
+
+                responsive: true,
+
+                plugins: {
+
+                    legend: {
+
+                        labels: {
+
+                            color: "white",
+
+                            font: {
+                                size: 14
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

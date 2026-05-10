@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sugarcane Leaf Disease Checker</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0f172a, #020617);
+  color: white;
+}
+
+.bg::before {
+  content: "";
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  background: #00ff88;
+  filter: blur(120px);
+  top: 10%;
+  left: 20%;
+  opacity: 0.2;
+}
+
+.container {
+  text-align: center;
+  margin-top: 80px;
+}
+
+.title {
+  font-size: 32px;
+}
+
+.subtitle {
+  color: #aaa;
+  margin-bottom: 30px;
+}
+
+.glass-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(15px);
+  padding: 30px;
+  border-radius: 20px;
+  width: 400px;
+  margin: auto;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+}
+
+.drop-zone {
+  border: 2px dashed #555;
+  padding: 30px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  border-radius: 12px;
+}
+
+.drop-zone.dragover {
+  border-color: #00ff88;
+  background: rgba(0,255,136,0.05);
+}
+
+.preview img {
+  max-width: 200px;
+  border-radius: 10px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 8px;
+  margin-top: 10px;
+  text-decoration: none;
+}
+
+.primary {
+  background: #00ff88;
+  color: black;
+}
+
+.outline {
+  border: 1px solid #00ff88;
+  color: #00ff88;
+}
+
+/* ✅ FIXED */
+.hidden {
+  display: none;
+}
+
+.spinner {
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg"></div>
+
+<main class="container">
+
+  <h1 class="title">🌱 Sugarcane AI</h1>
+  <p class="subtitle">Smart leaf disease detection system</p>
+
+  <div class="glass-card">
+
+    <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
+
+      <!-- DROP ZONE -->
+      <div id="dropZone" class="drop-zone">
+        <input id="fileInput" name="image" type="file" accept="image/*" hidden required>
+
+        <div class="drop-inner">
+          <div class="icon">📤</div>
+          <p>
+            Drag & drop image or 
+            <span id="browseBtn" style="color:#00ff88;cursor:pointer;">browse</span>
+          </p>
+          <small>JPG / PNG only</small>
+        </div>
+      </div>
+
+      <!-- PREVIEW -->
+      <div id="preview" class="preview hidden">
+        <img id="previewImg">
+        <p id="filename"></p>
+        <button type="button" class="btn small" onclick="removeFile()">Remove</button>
+      </div>
+
+      <!-- ACTION -->
+      <div class="actions">
+        <button class="btn primary" type="submit">🚀 Analyze</button>
+        <div id="spinner" class="spinner hidden">⏳ Processing...</div>
+      </div>
+
+    </form>
+
+    <a href="/dashboard" class="btn outline">📊 Dashboard</a>
+
+  </div>
+
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const dropZone = document.getElementById("dropZone");
+  const fileInput = document.getElementById("fileInput");
+  const preview = document.getElementById("preview");
+  const previewImg = document.getElementById("previewImg");
+  const filename = document.getElementById("filename");
+  const spinner = document.getElementById("spinner");
+  const browseBtn = document.getElementById("browseBtn");
+
+  browseBtn.onclick = () => fileInput.click();
+  dropZone.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", () => {
+    handleFile(fileInput.files[0]);
+  });
+
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
+
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+
+    const file = e.dataTransfer.files[0];
+
+    if (file) {
+      const dt = new DataTransfer();   // ✅ FIXED
+      dt.items.add(file);
+      fileInput.files = dt.files;
+
+      handleFile(file);
+    }
+  });
+
+  function handleFile(file) {
+    if (!file) return;
+
+    previewImg.src = URL.createObjectURL(file);
+    filename.innerText = file.name;
+    preview.classList.remove("hidden");
+  }
+
+  window.removeFile = function () {
+    fileInput.value = "";
+    preview.classList.add("hidden");
+  };
+
+  document.getElementById("uploadForm").addEventListener("submit", () => {
+    spinner.classList.remove("hidden");
+  });
+
+});
+</script>
+
+</body>
+</html>
