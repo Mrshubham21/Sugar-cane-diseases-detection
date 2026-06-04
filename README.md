@@ -31,6 +31,10 @@ custom cnn/
 |-- app.py
 |-- data.db
 |-- requirement.txt
+|-- images/
+|   |-- customcnn.png
+|   |-- effcientnet80.png
+|   `-- v2model.png
 |-- model/
 |   `-- model_optimized.tflite
 |-- static/
@@ -54,6 +58,32 @@ custom cnn/
 - NumPy
 
 The Python dependencies are listed in `requirement.txt`.
+
+## Model Comparison
+
+This project compares the proposed Custom CNN model with transfer learning models such as MobileNetV2 and EfficientNetB0. The training results and accuracy graphs are shown below.
+
+### Custom CNN
+
+![Custom CNN Accuracy](images/customcnn.png)
+
+### MobileNetV2
+
+![MobileNetV2 Accuracy](images/v2model.png)
+
+### EfficientNetB0
+
+![EfficientNetB0 Accuracy](images/effcientnet80.png)
+
+### Training Summary
+
+| Model | Epoch Setting | Early Stopping |
+| --- | --- | --- |
+| MobileNetV2 | 25 | Yes, patience=2 |
+| EfficientNetB0 | 15, 10+5 | No, callbacks not used |
+| Custom CNN | 40 | Yes, patience=7 |
+
+The proposed Custom CNN model was trained for a maximum of 40 epochs using the Adam optimizer. Early Stopping with patience 7 was employed to prevent overfitting and restore the best-performing model weights. Therefore, the actual number of training epochs depended on validation accuracy improvement.
 
 ## Setup
 
