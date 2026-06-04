@@ -9,6 +9,7 @@ import sqlite3
 
 app = Flask(__name__)
 app.secret_key = "replace_this_with_a_random_secret"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # =====================================
 # CLASS NAMES (MUST MATCH TRAINING)
@@ -90,9 +91,16 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 # DATABASE
 # =====================================
 
+def get_db():
+
+    return sqlite3.connect(
+        os.path.join(BASE_DIR, 'data.db')
+    )
+
+
 def init_db():
 
-    conn = sqlite3.connect('data.db')
+    conn = get_db()
 
     c = conn.cursor()
 
@@ -127,7 +135,7 @@ interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
-print("✅ Loaded model:", MODEL_PATH)
+print("Loaded model:", MODEL_PATH)
 
 # =====================================
 # HELPERS
@@ -292,7 +300,7 @@ def predict():
 
     # SAVE TO DATABASE
 
-    conn = sqlite3.connect('data.db')
+    conn = get_db()
 
     c = conn.cursor()
 
@@ -337,7 +345,6 @@ def predict():
         info=info,
         image_data=data_uri
     )
-
 # =====================================
 # DASHBOARD
 # =====================================
@@ -345,22 +352,33 @@ def predict():
 @app.route('/dashboard')
 def dashboard():
 
-    conn = sqlite3.connect('data.db')
+    conn = None
 
-    c = conn.cursor()
+    try:
+        conn = get_db()
 
-    c.execute("""
-        SELECT class, COUNT(*)
-        FROM predictions
-        GROUP BY class
-    """)
+        c = conn.cursor()
 
-    data = c.fetchall()
+        c.execute("""
+            SELECT class, COUNT(*)
+            FROM predictions
+            GROUP BY class
+        """)
 
-    conn.close()
+        data = c.fetchall()
+
+    except Exception as e:
+
+        print("Dashboard DB Error:", e)
+
+        data = []
+
+    finally:
+
+        if conn:
+            conn.close()
 
     labels = [row[0] for row in data]
-
     values = [row[1] for row in data]
 
     total = sum(values)
@@ -368,19 +386,15 @@ def dashboard():
     most_detected = "N/A"
 
     if values:
-
-        max_index = values.index(max(values))
-
-        most_detected = labels[max_index]
+        most_detected = labels[values.index(max(values))]
 
     return render_template(
-        'dashboard.html',
+        "dashboard.html",
         labels=labels,
         values=values,
         total=total,
         most_detected=most_detected
     )
-
 # =====================================
 # RUN
 # =====================================
