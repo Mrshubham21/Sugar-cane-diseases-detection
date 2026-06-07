@@ -1,5 +1,6 @@
 # Sugarcane Disease Detection
-
+## Live Demo
+https://sugar-cane-diseases-detection.onrender.com
 A Flask web application that detects sugarcane leaf disease from an uploaded image using a TensorFlow Lite model. The app shows the predicted class, confidence score, treatment guidance, prevention tips, fertilizer advice, and a dashboard of previous predictions stored in SQLite.
 
 ## Features
